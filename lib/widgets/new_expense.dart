@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import '../models/expense.dart';
 
 class NewExpense extends StatefulWidget {
-  const NewExpense({super.key});
+  const NewExpense({required this.addNewExpense, super.key});
+
+  final void Function(Expense expense) addNewExpense;
 
   @override
   State<NewExpense> createState() => _NewExpenseState();
@@ -45,10 +47,47 @@ class _NewExpenseState extends State<NewExpense> {
     });
   }
 
+  void _submitExpenseData() {
+    final amount = double.tryParse(_amountController.text);
+    final invalidAmount = amount == null || amount <= 0;
+    if (_titleController.text.trim().isEmpty ||
+        invalidAmount ||
+        _selectedDate == null) {
+      showDialog(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            title: const Text('Invalid Inputs!'),
+            content: const Text(
+              'Please make sure you entered a valid Title, Amount, Date and Category!',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                },
+                child: const Text('Okay'),
+              )
+            ],
+          );
+        },
+      );
+      return;
+    }
+    Expense newExpense = Expense(
+      title: _titleController.text,
+      amount: amount,
+      date: _selectedDate!,
+      category: _selectedCateory,
+    );
+    widget.addNewExpense(newExpense);
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 40, 16, 16),
       child: Column(
         children: [
           TextField(
@@ -120,10 +159,7 @@ class _NewExpenseState extends State<NewExpense> {
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: () {
-                  print(_titleController.text);
-                  print(_amountController.text);
-                },
+                onPressed: _submitExpenseData,
                 child: const Text('Save Expense'),
               ),
             ],
